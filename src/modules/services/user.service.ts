@@ -43,7 +43,28 @@ const getAllUsers = async () => {
     });
 };
 
+const updateUser = async (userId: string, userData: User) => {
+    // Remove id from userData if present to prevent constraint violation
+    const updateData = { ...userData };
+    if ('id' in updateData) {
+        delete (updateData as any).id;
+    }
+    
+    return await prisma.user.update({
+        where: { id: userId },
+        data: updateData
+    });
+};
+
+const deleteUser = async (userId: string) => {
+    return await prisma.user.delete({
+        where: { id: userId }
+    });
+};
+
 export const UserService = {
     createUser,
-    getAllUsers
+    getAllUsers,
+    updateUser,
+    deleteUser,
 };

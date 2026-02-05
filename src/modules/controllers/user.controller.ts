@@ -24,13 +24,7 @@ const userInfo = catchAsync(async (req: Request, res: Response) => {
 
 
 // create user 
-const createUser = catchAsync(async (req: Request, res: Response) => {
-    // Debug logging - safe handling of undefined body
-    console.log("=== CREATE USER DEBUG INFO ===");
-    console.log("Request headers:", req.headers);
-    console.log("Content-Type:", req.get('Content-Type'));
-    console.log("Body exists:", !!req.body);
-    console.log("Body type:", typeof req.body);
+const createUser = catchAsync(async (req: Request, res: Response) => { 
     
     if (req.body) {
         console.log("Raw body keys:", Object.keys(req.body));
@@ -38,7 +32,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
     } else {
         console.log("❌ Request body is undefined/null");
     }
-    console.log("============================");
+   
 
     // 1. Check if request body exists
     if (!req.body || Object.keys(req.body).length === 0) {
@@ -51,9 +45,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
                 message: "Please provide user information including name, email, and password"
             }]
         });
-    }
-
-    console.log("✅ Request body found, proceeding with validation");
+    } 
 
     // 2. Validate the request body
     const validatedData = userModel.userSchema.parse(req.body);
@@ -71,30 +63,42 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 
 
 // update user
-const updateUser = async (req: Request, res: Response) => {
-    try {
-        res.status(200).json({
-            message: "User updated",
-        });
-    } catch (error) {
-        res.status(500).json({
-            message: "Internal server error",
-        });
-    }
-}
+const updateUser = catchAsync(async (req: Request, res: Response) => { 
+    const { id } = req.params;
+    
+    // Ensure id is a string (handle potential string[] case)
+    const userId = Array.isArray(id) ? id[0] : id;
+    
+    if(!userId) return res.status(httpStatus.NOT_FOUND).json({ success: false, message: "User id not given" }); 
+    const result = await UserService.updateUser(userId, req.body);
+        
+    res.status(httpStatus.OK).json({
+        success: true,
+        message: "User updated successfully",
+        data: result
+    });
+    
+});
 
 // delete user
-const deleteUser = async (req: Request, res: Response) => {
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const userId = Array.isArray(id) ? id[0] : id;
+    console.log("Deleting user with id:", userId);
     try {
-        res.status(200).json({
-            message: "User deleted",
+       const result = await UserService.deleteUser(userId);
+        res.status(httpStatus.OK).json({
+            success: true,
+            message: "User deleted successfully",
+            data: result
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            success: false,
             message: "Internal server error",
         });
     }
-}
+})
 
 export default {
     userInfo,
